@@ -1,7 +1,7 @@
 /*
 Aquí solo guardo datos para poder probar la la funcionalidad del programa.
 */
-mis_fichas([[1,2], [3,4], [6,6], [5,3], [2,3], [5,5]]).
+mis_fichas([[1,2], [3,4], [6,6], [5,0], [2,3], [5,5]]).
 mesa([[1,2], [2,4], [4,5]]).
 
 /*
@@ -131,19 +131,34 @@ La funcion recorre fichas asignando valor recibe tus fichas, el numero extremo, 
 que se han jugado y regresa una lista con los valores heurísticos correspondientes a cada ficha
 */
 
-asigna_valor_ficha([Num1, Num2 | _], Numero_extremo, Total_mias, Total_jugadas, Valor):-
+asigna_valor_ficha([Num1, Num2], Num_cara, Total_mias, Total_jugadas, Valor):-
    Num1 == Num2,
-   Num1 == Numero_extremo,
+   Num1 == Num_cara,
+   (
+      Num_cara == 0 ->
+         Numero_extremo is 1;
+         Numero_extremo is Num_cara
+   ),
    Valor is 100 * Total_mias * Numero_extremo * Total_jugadas,
    !.
 
-asigna_valor_ficha([Num1 | _], Numero_extremo, Total_mias, Total_jugadas, Valor):-
-   Num1 == Numero_extremo,
+asigna_valor_ficha([Num1 | _], Num_cara, Total_mias, Total_jugadas, Valor):-
+   Num1 == Num_cara,
+   (
+      Num_cara == 0 ->
+         Numero_extremo is 1;
+         Numero_extremo is Num_cara
+   ),
    Valor is 10 * Total_mias * Numero_extremo * Total_jugadas,
    !.
 
-asigna_valor_ficha([_ | Num2], Numero_extremo, Total_mias, Total_jugadas,  Valor):-
-   Num2 == Numero_extremo,
+asigna_valor_ficha([_ , Num2 | _], Num_cara, Total_mias, Total_jugadas,  Valor):-
+   Num2 == Num_cara,
+   (
+      Num_cara == 0 ->
+         Numero_extremo is 1;
+         Numero_extremo is Num_cara
+   ),
    Valor is 10 * Total_mias * Numero_extremo * Total_jugadas,
    !.
 
@@ -171,6 +186,18 @@ funcion_heuristica([], Mis_fichas, Respuesta):-
    suma_fichas(Mis_fichas, Respuesta),
    !.
 
+funcion_heuristica([[Valor_izquierdo,Valor_derecho]], Mis_fichas, Respuesta):-
+   fichas_jugadas([[Valor_izquierdo, Valor_derecho]], Mis_fichas, Jugadas),
+   total_jugadas(Jugadas, Valor_izquierdo, Total_jugadas_izq),
+   total_jugadas(Jugadas, Valor_derecho, Total_jugadas_der),
+   dame_numeros(Mis_fichas, Valor_izquierdo, Aux_izq),
+   length(Aux_izq, Total_fichas_mias_izq),
+   dame_numeros(Mis_fichas, Valor_derecho, Aux_der),
+   length(Aux_der, Total_fichas_mias_der),
+   recorre_fichas_asignando_valor(Mis_fichas, Valor_izquierdo, Total_fichas_mias_izq, Total_jugadas_izq, L1),
+   recorre_fichas_asignando_valor(Mis_fichas, Valor_derecho, Total_fichas_mias_der, Total_jugadas_der, L2),
+   list_sum(L1, L2, Respuesta),
+   !.
 
 funcion_heuristica(Mesa, Mis_fichas, Respuesta):-
    /* Obtenemos los numeros de los extremos */
@@ -182,15 +209,16 @@ funcion_heuristica(Mesa, Mis_fichas, Respuesta):-
    total_jugadas(Jugadas, Valor_derecho, Total_jugadas_der),
    /* Obtenemos cuantas fichas tenemos con cada valor extremo */
    dame_numeros(Mis_fichas, Valor_izquierdo, Aux_izq),
-   length(Aux_izq, Total_fichas_mias_izq),
    dame_numeros(Mis_fichas, Valor_derecho, Aux_der),
+   length(Aux_izq, Total_fichas_mias_izq),
    length(Aux_der, Total_fichas_mias_der),
    /* Ahora recorremos toda nuestra lista */
    recorre_fichas_asignando_valor(Mis_fichas, Valor_izquierdo, Total_fichas_mias_izq, Total_jugadas_izq, L1),
    recorre_fichas_asignando_valor(Mis_fichas, Valor_derecho, Total_fichas_mias_der, Total_jugadas_der, L2),
    list_sum(L1, L2, Respuesta).
 
+otra_mesa([[0,2], [2,4]]).
 main(Respuesta):-
-   mesa(Mesa),
+   otra_mesa(Mesa),
    mis_fichas(Mis_fichas),
    funcion_heuristica(Mesa, Mis_fichas, Respuesta).
